@@ -3,7 +3,8 @@ ROWS = 5
 COL_WIDTH = 70
 ROW_HEIGHT = 30
 START_TIME = 9
-SIG = {'x0': 0, 'y0': 0, 'duration': 60, 'content': 'idk'}
+DEF_COLOR = 'red'
+SIG = {'x0': 0, 'y0': 0, 'duration': 60, 'content': 'idk', 'color': DEF_COLOR}
 
 
 SCHEDULE_START = (50, 50)

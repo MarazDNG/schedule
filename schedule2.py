@@ -4,6 +4,7 @@ import json
 from MyEntry import MyEntry
 from params import *
 from tools import *
+from tkinter.colorchooser import askcolor
 
 
 class Schedule:
@@ -54,7 +55,7 @@ class Rec:
 
     def _create_widgets(self):
         self.rec = self.cvs.create_rectangle(
-            self.x0, self.y0, self.x0 + self.width, self.y0 + self.height, fill='red')
+            self.x0, self.y0, self.x0 + self.width, self.y0 + self.height, fill=self.color)
         self.cvs.itemconfig(self.rec, tags=(f'movable-{self.rec}'))
 
         self.text = self.cvs.create_text(
@@ -109,7 +110,7 @@ class Rec:
     def _edit(self):
         LABEL_WIDTH = 8
         new_win = tkinter.Toplevel(root)
-        new_win.geometry('200x100')
+        new_win.geometry('200x150')
 
         e1 = MyEntry(new_win, 'Text:', self.content,
                      LABEL_WIDTH).get_entry()
@@ -117,6 +118,12 @@ class Rec:
                      LABEL_WIDTH).get_entry()
         e3 = MyEntry(new_win, 'Length:', str(self.duration),
                      LABEL_WIDTH).get_entry()
+
+        def b_fnc():
+            colors = askcolor()
+            self.color = colors[1]
+
+        tkinter.Button(new_win, text='change color', command=b_fnc).pack()
 
         def fnc():
             content = e1.get()
@@ -134,7 +141,7 @@ class Rec:
 
             # coords = self.cvs.itemcget(self.)
             Rec(self.cvs, x0=self.x0, y0=self.y0,
-                duration=duration, content=content)
+                duration=duration, content=content, color=self.color)
             # print('width: ', self.x1 - self.x0)
             self._delete()
             new_win.destroy()
