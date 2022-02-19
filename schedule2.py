@@ -5,39 +5,23 @@ from MyEntry import MyEntry
 from params import *
 from tools import *
 from tkinter.colorchooser import askcolor
+from Schedule import Schedule
 
 
-class Schedule:
-    def __init__(self, parent):
-        self.cvs = tkinter.Canvas(
-            parent, width=CANVAS_WIDTH, height=400, bg='gray')
-        self.cvs.pack()
-        self.draw_schedule()
-        self.cvs.create_rectangle(
-            10, 360, 70, 330, fill='orange', tags=('new'))
+class MenuOption:
+    def __init__(self, labeltext, fun, args):
+        self.text = 'default'
+        self.new_win = tkinter.Toplevel()
+        self.new_win.geometry('200x100')
+        self.e = MyEntry(self.new_win, labeltext)
 
-    def draw_schedule(self):
-        for i in range(ROWS + 1):
-            # Horizontal lines
-            self.cvs.create_line(SCHEDULE_START[0],
-                                 SCHEDULE_START[1] + i * ROW_HEIGHT,
-                                 SCHEDULE_END[0],
-                                 SCHEDULE_START[1] + i * ROW_HEIGHT)
+        def fnc():
+            self.text = self.e.get_entry().get()
+            self.new_win.destroy()
+            a_args = {**args, labeltext: self.text}
+            fun(**a_args)
 
-        for i in range(COLS + 1):
-            # Vertical lines
-            self.cvs.create_line(SCHEDULE_START[0] + i * COL_WIDTH,
-                                 SCHEDULE_START[1],
-                                 SCHEDULE_START[0] + i * COL_WIDTH,
-                                 SCHEDULE_END[1])
-        for i in range(COLS + 1):
-            # Time labels
-            l = tkinter.Label(root, text=f'{i + START_TIME}:00', bg='gray')
-            self.cvs.create_window(
-                SCHEDULE_START[0] + i * COL_WIDTH, SCHEDULE_START[1] - 20, window=l)
-
-    def set_orange_rec(self, fnc):
-        self.cvs.tag_bind('new', '<1>', fnc)
+        tkinter.Button(self.new_win, text='OK', command=fnc).pack()
 
 
 class Rec:
@@ -68,7 +52,7 @@ class Rec:
             f'movable-{self.text}',
         ]
         events = [
-            ['<3>', lambda e: self._edit()],
+            ['<3>', lambda e: self._menu(e)],
             ['<ButtonRelease>', lambda e: self._adjust_position()],
             ['<Control-Button-1>', lambda e: self._delete()],
             ['<B1-Motion>', lambda e: self._move(e)],
@@ -107,51 +91,41 @@ class Rec:
         self.cvs.after(0, self.cvs.delete, self.rec)
         self.cvs.after(0, self.cvs.delete, self.text)
 
-    def _edit(self):
-        LABEL_WIDTH = 8
-        new_win = tkinter.Toplevel(root)
-        new_win.geometry('200x150')
+    def _menu(self, e):
+        m = tkinter.Menu(self.cvs, tearoff=0)
+        m.add_command(label='text',
+                      command=lambda: MenuOption('content', self._recreate, self._get_kwargs()))
+        m.add_command(label='from',
+                      command=lambda: MenuOption('from', self._recreate, self._get_kwargs()))
+        m.add_command(label='duration',
+                      command=lambda: MenuOption('duration', self._recreate, self._get_kwargs()))
+        m.add_command(label='color',
+                      command=lambda: MenuOption('color', self._recreate, self._get_kwargs()))
+        m.tk_popup(e.x_root, e.y_root)
 
-        e1 = MyEntry(new_win, 'Text:', self.content,
-                     LABEL_WIDTH).get_entry()
-        e2 = MyEntry(new_win, 'From:', '',
-                     LABEL_WIDTH).get_entry()
-        e3 = MyEntry(new_win, 'Length:', str(self.duration),
-                     LABEL_WIDTH).get_entry()
+    def _recreate(self, **kwargs):
+        arguments = {**self._get_kwargs(), **kwargs}
+        if 'from' in arguments:
+            hours, minutes = arguments['from'].split(':')
+            hours = int(hours) + int(minutes) / 60
+            x = SCHEDULE_START[0] + int(hours - START_TIME) * COL_WIDTH
+            if x < 0:
+                x = 0
+            arguments['x0'] = x
+            arguments.pop('from')
+        Rec(self.cvs, **arguments)
+        self._delete()
 
-        def b_fnc():
-            colors = askcolor()
-            self.color = colors[1]
-
-        tkinter.Button(new_win, text='change color', command=b_fnc).pack()
-
-        def fnc():
-            content = e1.get()
-            start = e2.get()
-            duration = int(e3.get())
-
-            if content == '':
-                content = self.content
-
-            if start:
-                hours, minutes = start.split(':')
-                hours = int(hours) + int(minutes) / 60
-                self.x0 = SCHEDULE_START[0] + \
-                    int(hours - START_TIME) * COL_WIDTH
-
-            # coords = self.cvs.itemcget(self.)
-            Rec(self.cvs, x0=self.x0, y0=self.y0,
-                duration=duration, content=content, color=self.color)
-            # print('width: ', self.x1 - self.x0)
-            self._delete()
-            new_win.destroy()
-
-        btn = tkinter.Button(new_win, text='OK', command=fnc)
-        btn.pack()
+    def _get_kwargs(self):
+        x = {key: value for key, value in self.__dict__.items() if not key.startswith('__')
+             and not callable(key)}
+        if 'cvs' in x:
+            x.pop('cvs')
+        return x
 
     @property
     def width(self):
-        return self.duration / 60 * COL_WIDTH
+        return int(self.duration) / 60 * COL_WIDTH
 
     @property
     def height(self):
