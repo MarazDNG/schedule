@@ -4,7 +4,7 @@ COL_WIDTH = 70
 ROW_HEIGHT = 30
 START_TIME = 9
 DEF_COLOR = 'red'
-SIG = {'x0': 0, 'y0': 0, 'duration': 60, 'content': 'idk', 'color': DEF_COLOR}
+SIG = {'x0': 0, 'y0': 0, 'duration': 60, 'content': 'Item', 'color': DEF_COLOR}
 
 
 SCHEDULE_START = (50, 50)
@@ -13,5 +13,6 @@ SCHEDULE_HEIGHT = ROWS * ROW_HEIGHT
 SCHEDULE_END = (SCHEDULE_START[0] + SCHEDULE_WIDTH,
                 SCHEDULE_START[1] + SCHEDULE_HEIGHT)
 SCHEDULE = (*SCHEDULE_START, *SCHEDULE_END)
-FILE_NAME = 'shedule.txt'
+FILE_NAME = 'schedule.txt'
 CANVAS_WIDTH = SCHEDULE_START[0] * 2 + COLS * COL_WIDTH
+CANVAS_HEIGHT = SCHEDULE_START[1] * 2 + ROWS * ROW_HEIGHT + 60

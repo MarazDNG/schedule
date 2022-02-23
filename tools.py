@@ -31,3 +31,9 @@ def adjust_position_horizontally(obj):
     # col = (middle_point[0] - SCHEDULE_START[0]) % COL_WIDTH
     row = (middle_point[1] - SCHEDULE_START[1]) % ROW_HEIGHT
     obj.move_delta(0, -row + ROW_HEIGHT / 2)
+
+
+def string_to_hours(s):
+    hours, minutes = s.split(':')
+    hours = int(hours) + int(minutes) / 60
+    return hours

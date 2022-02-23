@@ -6,11 +6,11 @@ class Schedule:
     def __init__(self, parent):
         self.parent = parent
         self.cvs = tkinter.Canvas(
-            parent, width=CANVAS_WIDTH, height=400, bg='gray')
+            parent, width=CANVAS_WIDTH, height=CANVAS_HEIGHT, bg='gray')
         self.cvs.pack()
         self.draw_schedule()
         self.cvs.create_rectangle(
-            10, 360, 70, 330, fill='orange', tags=('new'))
+            SCHEDULE_START[0], SCHEDULE_END[1] + 50, SCHEDULE_START[0] + 60, SCHEDULE_END[1] + 80, fill='orange', tags=('new'))
 
     def draw_schedule(self):
         for i in range(ROWS + 1):
