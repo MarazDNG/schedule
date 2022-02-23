@@ -2,26 +2,23 @@
 import tkinter
 import json
 from MyEntry import MyEntry
+from Schedule import Schedule
 from params import *
 from tools import *
-from tkinter.colorchooser import askcolor
-from Schedule import Schedule
 
 
 class MenuOption:
-    def __init__(self, labeltext, fun, args):
-        self.text = 'default'
-        self.new_win = tkinter.Toplevel()
-        self.new_win.geometry('200x100')
-        self.e = MyEntry(self.new_win, labeltext)
+    def __init__(self, labeltext, fun):
+        new_win = tkinter.Toplevel()
+        new_win.geometry('200x100')
+        e = MyEntry(new_win, labeltext)
 
         def fnc():
-            self.text = self.e.get_entry().get()
-            self.new_win.destroy()
-            a_args = {**args, labeltext: self.text}
-            fun(**a_args)
+            text = e.get_entry().get()
+            new_win.destroy()
+            fun(text)
 
-        tkinter.Button(self.new_win, text='OK', command=fnc).pack()
+        tkinter.Button(new_win, text='OK', command=fnc).pack()
 
 
 class Rec:
@@ -69,10 +66,7 @@ class Rec:
         self.cvs.moveto(self.text, x - self.width / 6, y - self.height / 6)
 
     def _to_string(self):
-        d = {key: value for key, value in self.__dict__.items() if not key.startswith('__')
-             and not callable(key)}
-        if 'cvs' in d:
-            d.pop('cvs')
+        d = self._get_kwargs()
         print('_to_string:', d)
         return json.dumps(d)
 
@@ -93,28 +87,35 @@ class Rec:
 
     def _menu(self, e):
         m = tkinter.Menu(self.cvs, tearoff=0)
-        m.add_command(label='text',
-                      command=lambda: MenuOption('content', self._recreate, self._get_kwargs()))
-        m.add_command(label='from',
-                      command=lambda: MenuOption('from', self._recreate, self._get_kwargs()))
-        m.add_command(label='duration',
-                      command=lambda: MenuOption('duration', self._recreate, self._get_kwargs()))
-        m.add_command(label='color',
-                      command=lambda: MenuOption('color', self._recreate, self._get_kwargs()))
-        m.tk_popup(e.x_root, e.y_root)
 
-    def _recreate(self, **kwargs):
-        arguments = {**self._get_kwargs(), **kwargs}
-        if 'from' in arguments:
-            hours, minutes = arguments['from'].split(':')
-            hours = int(hours) + int(minutes) / 60
-            x = SCHEDULE_START[0] + int(hours - START_TIME) * COL_WIDTH
-            if x < 0:
-                x = 0
-            arguments['x0'] = x
-            arguments.pop('from')
-        Rec(self.cvs, **arguments)
-        self._delete()
+        def text_func(a):
+            self.cvs.itemconfig(self.text, text=a)
+            self.content = a
+
+        def from_func(a):
+            x0 = SCHEDULE_START[0] + \
+                (string_to_hours(a) - START_TIME) * COL_WIDTH
+            delta = x0 - self.x0
+            self.move_delta(delta, 0)
+
+        def duration_func(a):
+            self.duration = a
+            self.cvs.coords(self.rec, self.x0, self.y0,
+                            self.x0 + self.width, self.y0 + self.height)
+
+        def color_func(a):
+            self.cvs.itemconfig(self.rec, fill=a)
+            self.color = a
+
+        m.add_command(label='text',
+                      command=lambda: MenuOption('text', text_func))
+        m.add_command(label='from',
+                      command=lambda: MenuOption('from', from_func))
+        m.add_command(label='duration',
+                      command=lambda: MenuOption('duration', duration_func))
+        m.add_command(label='color',
+                      command=lambda: MenuOption('color', color_func))
+        m.tk_popup(e.x_root, e.y_root)
 
     def _get_kwargs(self):
         x = {key: value for key, value in self.__dict__.items() if not key.startswith('__')
@@ -123,11 +124,11 @@ class Rec:
             x.pop('cvs')
         return x
 
-    @property
+    @ property
     def width(self):
         return int(self.duration) / 60 * COL_WIDTH
 
-    @property
+    @ property
     def height(self):
         return ROW_HEIGHT
 
@@ -140,11 +141,11 @@ class Rec:
         self.cvs.move(self.rec, x, y)
         self.cvs.move(self.text, x, y)
 
-    @classmethod
+    @ classmethod
     def set_adjust_position(cls, fnc):
         cls._fnc_position = fnc
 
-    @classmethod
+    @ classmethod
     def all_to_string(cls):
         # Return string from which the rectangles can be again built from.
         text = ''
@@ -153,7 +154,7 @@ class Rec:
         text = text[:-1]
         return text
 
-    @classmethod
+    @ classmethod
     def build_from_text(cls, cvs, text):
         s = text.split(';')
         for i in s:
@@ -163,7 +164,8 @@ class Rec:
 
 if __name__ == '__main__':
     root = tkinter.Tk()
-    root.geometry(f'{CANVAS_WIDTH}x400')
+    root.geometry(f'{CANVAS_WIDTH}x{CANVAS_HEIGHT}')
+    root.resizable(False, False)
 
     Rec.set_adjust_position(adjust_position_horizontally)
 
@@ -176,9 +178,6 @@ if __name__ == '__main__':
         text = f.read()
         if text != '':
             Rec.build_from_text(schedule.cvs, text)
-
-    def new_rec(e):
-        Rec(schedule.cvs)
 
     root.protocol('WM_DELETE_WINDOW', root.destroy)
 
