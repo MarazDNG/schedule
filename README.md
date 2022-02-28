@@ -12,4 +12,4 @@ Controls:
 Note about inputing data:
 - enter duration in minutes
 - enter color as a defined color such as "blue", "red" etc. or in a hexadecimal format including hash sign e.g. "#ffffff"
-- enter time from which activity starts as a time separated by semicolon e.g. "13:30"
+- enter time from which activity starts as a time separated by colon e.g. "13:30"
